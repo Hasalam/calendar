@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { CiSearch } from "react-icons/ci";
 import { Button, Col, Input, Row } from "reactstrap";
 import styled from "styled-components";
+import moment from "moment";
 import {
   AppointmentBody,
   AppointmentTitle,
@@ -42,20 +43,31 @@ export const AppointmentForm = ({
   setIsShowPatientsModal,
 }) => {
   const saveAppointment = () => {
-    if (!appointment.id) {
-      axios
-        .post("https://localhost:7070/api/AppointmentModels", {
-          ...appointment,
-        })
-        .then(() => refreshAppointments());
+    const validate = validateAppointment(appointment);
+    if (Object.values(validate).every((item) => item)) {
+      if (!appointment.id) {
+        axios
+          .post("https://localhost:7070/api/AppointmentModels", {
+            ...appointment,
+          })
+          .then(() => refreshAppointments());
+      } else {
+        axios
+          .put(
+            `https://localhost:7070/api/AppointmentModels/${appointment.id}`,
+            {
+              ...appointment,
+            }
+          )
+          .then(() => {
+            refreshAppointments();
+            alert("Changed saved!");
+          });
+      }
+      setIsShowForms(false);
     } else {
-      axios
-        .put(`https://localhost:7070/api/AppointmentModels/${appointment.id}`, {
-          ...appointment,
-        })
-        .then(() => refreshAppointments());
+      setValidateObject(validate);
     }
-    setIsShowForms(false);
   };
 
   const deleteAppointment = () => {
@@ -63,6 +75,29 @@ export const AppointmentForm = ({
       .delete(`https://localhost:7070/api/AppointmentModels/${appointment.id}`)
       .then(() => refreshAppointments());
     setIsShowForms(false);
+  };
+
+  const [validateObject, setValidateObject] = useState({
+    title: true,
+    description: true,
+    patientId: true,
+    duration: true,
+    phoneNumber: true,
+    email: true,
+    date: true,
+  });
+
+  const validateAppointment = (appointment) => {
+    var result = {
+      title: appointment.title.trim().length > 0,
+      description: appointment.description.trim().length > 0,
+      patientId: appointment.patientId > 0,
+      duration: appointment.duration > 0,
+      phoneNumber: appointment.phoneNumber.trim().length > 0,
+      email: appointment.email.trim().length > 0,
+      date: moment(appointment.date).isValid() > 0,
+    };
+    return result;
   };
 
   return (
@@ -74,6 +109,7 @@ export const AppointmentForm = ({
           onChange={(e) => {
             changeEventHandler(e.target.value, "title");
           }}
+          invalid={!validateObject.title}
         />
         <AppointmentBody
           value={appointment?.description}
@@ -81,10 +117,16 @@ export const AppointmentForm = ({
           onChange={(e) => {
             changeEventHandler(e.target.value, "description");
           }}
+          invalid={!validateObject.description}
         />
         <Row>
           <Col xs={10} className="px-0 ps-3">
-            <AppointmentBody value={patient?.name} />
+            <AppointmentBody
+              value={patient?.name}
+              readOnly
+              placeholder="patient"
+              invalid={!validateObject.patientId}
+            />
           </Col>
           <Col xs={2} className="px-0">
             <CiSearch
@@ -93,7 +135,7 @@ export const AppointmentForm = ({
             />
           </Col>
         </Row>
-        <Input
+        <AppointmentBody
           id="exampleDate"
           name="date"
           placeholder="date placeholder"
@@ -102,18 +144,20 @@ export const AppointmentForm = ({
           onChange={(e) => {
             changeEventHandler(e.target.value, "date");
           }}
+          invalid={!validateObject.date}
         />
         <AppointmentBody
           value={appointment?.duration}
-          placeholder="Duration"
+          placeholder="duration"
           type="number"
           max={24}
           min={1}
           onChange={(e) => {
             changeEventHandler(e.target.value, "duration");
           }}
+          invalid={!validateObject.duration}
         />
-        <Input
+        <AppointmentBody
           id="exampleEmail"
           name="email"
           placeholder="email"
@@ -122,6 +166,7 @@ export const AppointmentForm = ({
           onChange={(e) => {
             changeEventHandler(e.target.value, "email");
           }}
+          invalid={!validateObject.email}
         />
         <AppointmentBody
           value={appointment?.phoneNumber}
@@ -129,11 +174,15 @@ export const AppointmentForm = ({
           onChange={(e) => {
             changeEventHandler(e.target.value, "phoneNumber");
           }}
+          invalid={!validateObject.phoneNumber}
         />
         <Row>
           <Button
             className="border-bottom border-dark"
-            onClick={saveAppointment}
+            onClick={() => {
+              validateAppointment(appointment);
+              saveAppointment();
+            }}
           >
             {appointment?.id ? "Save Changes" : "Create"}
           </Button>

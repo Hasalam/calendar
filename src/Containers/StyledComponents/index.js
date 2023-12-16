@@ -103,6 +103,7 @@ export const AppointmentTitle = styled("input")`
   color: #dddddd;
   outline: unset;
   border-bottom: 1px solid #464648;
+  border: ${(props) => (props.invalid ? "1px solid red" : "")};
 `;
 
 export const AppointmentBody = styled("input")`
@@ -114,4 +115,5 @@ export const AppointmentBody = styled("input")`
   color: #dddddd;
   outline: unset;
   border-bottom: 1px solid #464648;
+  border: ${(props) => (props.invalid ? "1px solid red" : "")};
 `;

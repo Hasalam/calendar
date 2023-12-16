@@ -11,6 +11,7 @@ import {
 } from "../../Containers/StyledComponents";
 import moment from "moment";
 import { DISPLAY_MODE_DAY } from "../../Helpers/const";
+import { Tooltip } from "react-tooltip";
 
 export const MonthDaysList = ({
   startDay,
@@ -32,7 +33,14 @@ export const MonthDaysList = ({
         >
           <RowInCell justifyContent={"flex-end"}>
             <ShowDayWrapper>
-              <DayWrapper onDoubleClick={() => openFormHandler("Update")}>
+              <DayWrapper
+                onDoubleClick={() => openFormHandler("Update")}
+                onClick={() => {
+                  setDisplayMode(DISPLAY_MODE_DAY);
+                  setToday(dayItem);
+                }}
+                className="day-item"
+              >
                 {dayItem.isSame(moment(), "day") ? (
                   <CurrentDayWrapper>{dayItem.format("D")}</CurrentDayWrapper>
                 ) : (
@@ -49,6 +57,11 @@ export const MonthDaysList = ({
                     <EventListItemWrapper key={a.id}>
                       <EventItemWrapper
                         onDoubleClick={() => openFormHandler("Update", a)}
+                        data-tooltip-id="appointmentTooltip"
+                        data-tooltip-content={a.title}
+                        data-tooltip-place="right"
+                        data-tooltip-variant="light"
+                        data-tooltip-hidden={a.title.length < 16}
                       >
                         {a.title}
                       </EventItemWrapper>
@@ -70,6 +83,7 @@ export const MonthDaysList = ({
           </RowInCell>
         </CellWrapper>
       ))}
+      <Tooltip id="appointmentTooltip" />
     </>
   );
 };

@@ -7,12 +7,15 @@ import {
   ModalFooter,
   Table,
   Input,
+  PaginationLink,
+  PaginationItem,
+  Pagination,
 } from "reactstrap";
 import axios from "axios";
 
 const PatientsModal = ({ isOpened, modalOnClose, changeEventHandler }) => {
   const [patients, setPatients] = useState([]);
-  const [search,setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     axios
@@ -20,9 +23,17 @@ const PatientsModal = ({ isOpened, modalOnClose, changeEventHandler }) => {
       .then((response) => setPatients(response.data));
   }, []);
 
-  const filteredPatients = useMemo(()=>{
-    return patients?.filter((p)=> {return p.name.includes(search)})
-  },[search,patients]);
+  const filteredPatients = useMemo(() => {
+    return patients?.filter((p) => {
+      return p.name.toLowerCase().includes(search.toLowerCase());
+    });
+  }, [search, patients]);
+
+  const closeBtn = (
+    <button className="closeBtn" onClick={modalOnClose} type="button">
+      &times;
+    </button>
+  );
 
   return (
     <Modal
@@ -31,10 +42,17 @@ const PatientsModal = ({ isOpened, modalOnClose, changeEventHandler }) => {
       fade={false}
       dark
       size="xl"
+      scrollable
     >
-      <ModalHeader toggle={modalOnClose}>Patients list</ModalHeader>
+      <ModalHeader toggle={modalOnClose} close={closeBtn}>
+        Patients list
+        <Input
+          className="search"
+          placeholder="Search..."
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </ModalHeader>
       <ModalBody>
-        <Input placeholder="Search..." onChange={(e)=> setSearch(e.target.value)}/>
         <Table bordered dark hover>
           <thead>
             <tr>
@@ -46,10 +64,17 @@ const PatientsModal = ({ isOpened, modalOnClose, changeEventHandler }) => {
             </tr>
           </thead>
           <tbody>
-            {filteredPatients?.map((p,i) => (
-              <tr key={p.id} onClick={()=> {changeEventHandler(p.id,'patientId');
-              modalOnClose();}}>
-                <th scope="row">{i+1}</th>
+            {filteredPatients?.map((p, i) => (
+              <tr
+                key={p.id}
+                onClick={() => {
+                  changeEventHandler(p.id, "patientId");
+                  changeEventHandler(p.email, "email");
+                  changeEventHandler(p.phoneNumber, "phoneNumber");
+                  modalOnClose();
+                }}
+              >
+                <th scope="row">{i + 1}</th>
                 <td>{p.name}</td>
                 <td>{p.phoneNumber}</td>
                 <td>{p.email}</td>

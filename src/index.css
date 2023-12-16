@@ -46,3 +46,20 @@ code {
   border-bottom: 1px solid #464648 !important;
   margin-bottom: 20px;
 }
+
+.day-item :hover {
+  color:#416bbd;
+}
+.closeBtn {
+  background-color: transparent;
+    color: white;
+    border: none;
+    font-size: 40px;
+
+}
+.closeBtn:hover {
+  color: #416bbd;
+}
+.search {
+  margin: 10px 0px 0px 0px;
+}

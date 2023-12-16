@@ -7,6 +7,7 @@ export const emptyAssessment = {
   email: "",
   phoneNumber: "",
   patientId: 0,
+  duration: 0,
   patient: null,
 };
 

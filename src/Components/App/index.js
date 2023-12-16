@@ -5,7 +5,11 @@ import { CalendarGrid } from "../CalendarGrid";
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import axios from "axios";
 import { PatientsModal } from "../PatientsModal";
-import { DISPLAY_MODE_DAY, DISPLAY_MODE_MONTH } from "../../Helpers/const";
+import {
+  DISPLAY_MODE_DAY,
+  DISPLAY_MODE_MONTH,
+  emptyAssessment,
+} from "../../Helpers/const";
 import { DayShowComponent } from "../DayShowComponent";
 import { AppointmentForm } from "../AppointmentForm";
 import { ShadowWrapper } from "../../Containers/StyledComponents";
@@ -66,7 +70,11 @@ function App() {
           to: end.format("MM.DD.YYYY"),
         },
       })
-      .then((response) => setAppointments(response.data));
+      .then((response) => {
+        setAppointments(response.data);
+        setAppointment(emptyAssessment);
+        setPatient(null);
+      });
   }, [end, start]);
 
   useEffect(() => {

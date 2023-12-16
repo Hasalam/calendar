@@ -9,7 +9,7 @@ import {
   EventListWrapper,
 } from "../../Containers/StyledComponents";
 import { CiSearch } from "react-icons/ci";
-import { Button, Col, Input, Row } from "reactstrap";
+import { Button, Col, Input, Row, Alert } from "reactstrap";
 import axios from "axios";
 import { ITEM_PER_DAY, emptyAssessment } from "../../Helpers/const";
 import { appointmentMapper } from "../../Helpers/appointmentMapper";
@@ -63,6 +63,7 @@ const ScaleCellTimeWrapper = styled("div")`
   left: -26px;
   top: -6px;
   font-size: 10px;
+  cursor: pointer;
 `;
 const ScaleCellAppointmentWrapper = styled("div")`
   min-height: 26px;
@@ -135,23 +136,54 @@ export const DayShowComponent = ({
   }, [appointments, today]);
 
   const saveAppointment = () => {
-    if (!selectedAppointment.id) {
-      axios
-        .post("https://localhost:7070/api/AppointmentModels", {
-          ...selectedAppointment,
-        })
-        .then(() => refreshAppointments());
-    } else {
-      axios
-        .put(
-          `https://localhost:7070/api/AppointmentModels/${selectedAppointment.id}`,
-          {
+    const validate = validateAppointment(selectedAppointment);
+    if (Object.values(validate).every((item) => item)) {
+      if (!selectedAppointment.id) {
+        axios
+          .post("https://localhost:7070/api/AppointmentModels", {
             ...selectedAppointment,
-          }
-        )
-        .then(() => refreshAppointments());
+          })
+          .then(() => refreshAppointments());
+      } else {
+        axios
+          .put(
+            `https://localhost:7070/api/AppointmentModels/${selectedAppointment.id}`,
+            {
+              ...selectedAppointment,
+            }
+          )
+          .then(() => {
+            refreshAppointments();
+            alert("Changed saved!");
+          });
+      }
+      setIsShowForms(false);
+    } else {
+      setValidateObject(validate);
     }
-    setIsShowForms(false);
+  };
+
+  const [validateObject, setValidateObject] = useState({
+    title: true,
+    description: true,
+    patientId: true,
+    duration: true,
+    phoneNumber: true,
+    email: true,
+    date: true,
+  });
+
+  const validateAppointment = (appointment) => {
+    var result = {
+      title: appointment.title.trim().length > 0,
+      description: appointment.description.trim().length > 0,
+      patientId: appointment.patientId > 0,
+      duration: appointment.duration > 0,
+      phoneNumber: appointment.phoneNumber.trim().length > 0,
+      email: appointment.email.trim().length > 0,
+      date: moment(appointment.date).isValid() > 0,
+    };
+    return result;
   };
 
   const saveAppointmentGiven = (appointment) => {
@@ -231,7 +263,16 @@ export const DayShowComponent = ({
                 onDrop={(e) => onDropHandler(e, i)}
                 onDragOver={(e) => e.preventDefault()}
               >
-                <ScaleCellTimeWrapper>
+                <ScaleCellTimeWrapper
+                  onDoubleClick={() =>
+                    setSelectedAppointment({
+                      ...emptyAssessment,
+                      date: `${moment(today)
+                        .hour(i)
+                        .format("YYYY-MM-DDTHH:mm:ss")}`,
+                    })
+                  }
+                >
                   {i !== 0 ? <>{`${i}`.padStart(2, "0")}:00</> : null}
                 </ScaleCellTimeWrapper>
                 <ScaleCellAppointmentWrapper />
@@ -259,26 +300,36 @@ export const DayShowComponent = ({
           <div>
             <AppointmentTitle
               value={selectedAppointment?.title}
-              placeholder="Title"
+              placeholder="title"
               onChange={(e) => {
                 changeEventHandler(e.target.value, "title");
               }}
+              invalid={!validateObject.title}
             />
             <AppointmentBody
               value={selectedAppointment?.description}
-              placeholder="Description"
+              placeholder="description"
               onChange={(e) => {
                 changeEventHandler(e.target.value, "description");
               }}
+              invalid={!validateObject.description}
             />
-            <AppointmentBody value={patient?.name} placeholder="Patient" />
-            <Button
-              className="w-100"
-              onClick={() => setIsShowPatientsModal(true)}
-            >
-              <CiSearch style={{ cursor: "pointer" }} />
-            </Button>
-
+            <Row>
+              <Col xs={10} className="px-0 ps-3">
+                <AppointmentBody
+                  value={patient?.name}
+                  readOnly
+                  invalid={!validateObject.patientId}
+                  placeholder="patient"
+                />
+              </Col>
+              <Col xs={2} className="px-0">
+                <CiSearch
+                  onClick={() => setIsShowPatientsModal(true)}
+                  style={{ cursor: "pointer" }}
+                />
+              </Col>
+            </Row>
             <AppointmentBody
               id="exampleDate"
               name="date"
@@ -288,33 +339,37 @@ export const DayShowComponent = ({
               onChange={(e) => {
                 changeEventHandler(e.target.value, "date");
               }}
+              invalid={!validateObject.date}
             />
             <AppointmentBody
               value={selectedAppointment?.duration}
-              placeholder="Duration"
+              placeholder="duration"
               type="number"
               max={24}
               min={1}
               onChange={(e) => {
                 changeEventHandler(e.target.value, "duration");
               }}
+              invalid={!validateObject.duration}
             />
             <AppointmentBody
               id="exampleEmail"
               name="email"
-              placeholder="Email"
+              placeholder="email"
               type="email"
               value={selectedAppointment?.email}
               onChange={(e) => {
                 changeEventHandler(e.target.value, "email");
               }}
+              invalid={!validateObject.email}
             />
             <AppointmentBody
               value={selectedAppointment?.phoneNumber}
-              placeholder="Phone number"
+              placeholder="phone number"
               onChange={(e) => {
                 changeEventHandler(e.target.value, "phoneNumber");
               }}
+              invalid={!validateObject.phoneNumber}
             />
             <Button
               className="border-bottom border-dark w-100"
